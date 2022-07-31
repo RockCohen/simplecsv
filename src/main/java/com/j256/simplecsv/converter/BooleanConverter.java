@@ -29,30 +29,51 @@ public class BooleanConverter implements Converter<Boolean, BooleanConverter.Con
 	 * not either false or true (or the ones specified in the format). Default is that an invalid value will generate
 	 * false.
 	 */
+	// 匹配错误标志
 	public static final long PARSE_ERROR_ON_INVALID_VALUE = 1 << 1;
 	/**
 	 * Set this flag using {@link CsvColumn#converterFlags()} if you want the boolean formats to be compared
 	 * case-sensitively. So "TRUE" and "True" would be converted into false. Default is case-insensitive.
 	 */
+	// 大小写敏感标志
 	public static final long CASE_SENSITIVE = 1 << 2;
 	/**
 	 * Set this flag using {@link CsvColumn#converterFlags()} if you want the output to be surrounded by quotes. Default
 	 * is none.
 	 */
+	// 引号标志
 	public static final long NEEDS_QUOTES = 1 << 3;
 
+	// 采用饿汉式的单例模式
 	private static final BooleanConverter singleton = new BooleanConverter();
 
+	// 默认数据格式，用于config的format字段。
 	private static final String DEFAULT_TRUE_STRING = "true";
 	private static final String DEFAULT_FALSE_STRING = "false";
 
 	/**
 	 * Get singleton for class.
+	 * 采用单例模式来实现转换器显然是合理的
 	 */
 	public static BooleanConverter getSingleton() {
 		return singleton;
 	}
 
+	/**
+	 *
+	 * @param format
+	 *            Optional string format which affects the output and parsing of the field. Null if none supplied in
+	 *            which case the default format is used.
+	 *            定义输出数据的格式，null时采用默认的数据格式。
+	 * @param flags
+	 *            Optional numerical flags which affect the output and parsing of the field. 0 if no flags supplied.
+	 *            影响字段输出和解析的可选数字标志。如果没有提供标志，则为 0。
+	 * @param fieldInfo
+	 *            Information about the field associated with this converter.
+	 *            有关与此转换器关联的字段的信息。
+	 *
+	 * @return 配置信息
+	 */
 	@Override
 	public ConfigInfo configure(String format, long flags, ColumnInfo<Boolean> fieldInfo) {
 		String trueString;
