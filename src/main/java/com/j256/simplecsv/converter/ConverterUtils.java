@@ -16,6 +16,7 @@ public class ConverterUtils {
 
 	/**
 	 * Add internal converters to the map.
+	 * 添加支持的转换类型在这儿添加
 	 */
 	public static void addInternalConverters(Map<Class<?>, Converter<?, ?>> converterMap) {
 		converterMap.put(BigDecimal.class, BigDecimalConverter.getSingleton());

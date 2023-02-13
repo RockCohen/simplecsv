@@ -214,9 +214,12 @@ public class ColumnInfo<T> {
 	/**
 	 * Make a column-info instance from a Java Field.
 	 */
+	/* 对注解的解析：
+
+	 */
 	public static <T> ColumnInfo<T> fromAnnotation(CsvColumn csvColumn, String fieldName, Class<T> type, Field field,
 			Method getMethod, Method setMethod, Converter<T, ?> converter) {
-		return fromAnnoation(csvColumn.converterClass(), csvColumn.format(), csvColumn.converterFlags(),
+		return fromAnnotation(csvColumn.converterClass(), csvColumn.format(), csvColumn.converterFlags(),
 				csvColumn.columnName(), csvColumn.defaultValue(), csvColumn.afterColumn(), csvColumn.mustNotBeBlank(),
 				csvColumn.mustBeSupplied(), csvColumn.trimInput(), fieldName, type, field, getMethod, setMethod,
 				converter);
@@ -227,28 +230,30 @@ public class ColumnInfo<T> {
 	 */
 	public static <T> ColumnInfo<T> fromAnnotation(CsvField csvField, String fieldName, Class<T> type, Field field,
 			Method getMethod, Method setMethod, Converter<T, ?> converter) {
-		return fromAnnoation(csvField.converterClass(), csvField.format(), csvField.converterFlags(),
+		return fromAnnotation(csvField.converterClass(), csvField.format(), csvField.converterFlags(),
 				csvField.columnName(), csvField.defaultValue(), null, csvField.mustNotBeBlank(),
 				csvField.mustBeSupplied(), csvField.trimInput(), fieldName, type, field, getMethod, setMethod,
 				converter);
 	}
 
-	private static <T> ColumnInfo<T> fromAnnoation(Class<? extends Converter<?, ?>> converterClass, String format,
+	/* 使用注解开发的经典例子：
+	 */
+	private static <T> ColumnInfo<T> fromAnnotation(Class<? extends Converter<?, ?>> converterClass, String format,
 			long converterFlags, String columnName, String defaultValue, String afterColumn, boolean mustNotBeBlank,
 			boolean mustBeSupplied, boolean trimInput, String fieldName, Class<T> type, Field field, Method getMethod,
 			Method setMethod, Converter<T, ?> converter) {
 		if (converterClass == VoidConverter.class) {
 			if (converter == null) {
 				throw new IllegalArgumentException("No converter available for type: " + type);
-			} else {
-				// use the passed in one
 			}
+			// use the passed in one
 		} else {
 			@SuppressWarnings("unchecked")
 			Converter<T, Object> castConverter =
 					(Converter<T, Object>) ConverterUtils.constructConverter(converterClass);
 			converter = castConverter;
 		}
+		// 各关键字段的处理
 		if (format != null && format.equals(CsvColumn.DEFAULT_VALUE)) {
 			format = null;
 		}

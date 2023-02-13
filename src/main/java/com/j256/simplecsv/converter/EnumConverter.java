@@ -19,6 +19,7 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * 
  * @author graywatson
  */
+/* 枚举的单例模式 */
 public class EnumConverter implements Converter<Enum<?>, EnumConverter.ConfigInfo> {
 
 	/**

@@ -46,31 +46,37 @@ import com.j256.simplecsv.processor.ParseError.ErrorType;
  * 
  * @author graywatson
  */
+/*  */
 @SuppressWarnings("deprecation")
 public class CsvProcessor<T> {
 
 	/**
 	 * Default separator character for columns. This can be changed with {@link #setColumnSeparator(char)}.
 	 */
+	/* 默认分隔符 */
 	public static final char DEFAULT_COLUMN_SEPARATOR = ',';
 	/**
 	 * Default quote character for columns to wrap them if they have special characters. This can be changed with
 	 * {@link #setColumnQuote(char)}.
 	 */
+	/* 默认引号 */
 	public static final char DEFAULT_COLUMN_QUOTE = '"';
 	/**
 	 * Default line termination string to be written at the end of CSV lines. This can be changed with
 	 * {@link #setLineTermination(String)}.
 	 */
+	/* 默认换行符 */
 	public static final String DEFAULT_LINE_TERMINATION = System.getProperty("line.separator");
 
-	private static ColumnNameMatcher stringEqualsColumnNameMatcher = new ColumnNameMatcher() {
+	/* 接口实例的注入方式 */
+	private static final ColumnNameMatcher stringEqualsColumnNameMatcher = new ColumnNameMatcher() {
 		@Override
 		public boolean matchesColumnName(String definitionName, String csvName) {
 			return definitionName.equals(csvName);
 		}
 	};
 
+	/* 通过静态值赋值默认值 */
 	private char columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 	private char columnQuote = DEFAULT_COLUMN_QUOTE;
 	private String lineTermination = DEFAULT_LINE_TERMINATION;
@@ -89,11 +95,13 @@ public class CsvProcessor<T> {
 	private Constructor<T> constructor;
 	private Callable<T> constructorCallable;
 
+	/* 缓存 */
 	private final Map<Class<?>, Converter<?, ?>> converterMap = new HashMap<Class<?>, Converter<?, ?>>();
 
 	private List<ColumnInfo<Object>> allColumnInfos;
 	private Map<Integer, ColumnInfo<Object>> columnPositionInfoMap;
 
+	/* 静态代码块初始化转换器 */
 	{
 		ConverterUtils.addInternalConverters(converterMap);
 	}
@@ -104,8 +112,10 @@ public class CsvProcessor<T> {
 
 	/**
 	 * Constructs a processor with an entity class whose fields should be marked with {@link CsvColumn} annotations. The
-	 * entity-class must also define a public no-arg contructor so the processor can instantiate them using reflection.
+	 * entity-class must also define a public no-arg constructor so the processor can instantiate them using reflection.
 	 */
+	/* T对应的类需要添加注解：CsvColumn */
+	/* T对应的类需要无参构造器，利用反射进行实例化 */
 	public CsvProcessor(Class<T> entityClass) {
 		this.entityClass = entityClass;
 	}
@@ -114,6 +124,9 @@ public class CsvProcessor<T> {
 	 * Register a converter class for all instances of the class argument. The converter can also be specified with the
 	 * {@link CsvColumn#converterClass()} annotation field.
 	 */
+	/* 添加常用的数据类型及其转换器到转换器缓存中 */
+	/* 通常在T类中有其他非基本数据类的时候使用 */
+	/* 提供一种嵌套结构的处理方式 */
 	public <FT> void registerConverter(Class<FT> clazz, Converter<FT, ?> converter) {
 		converterMap.put(clazz, converter);
 	}
@@ -1053,23 +1066,41 @@ public class CsvProcessor<T> {
 		}
 	}
 
+	/* 处理器的初始化方法 初始化成员变量：allColumnInfos */
+	/*
+	 * 需要完成以下进步：
+	 * 1. 收集类及其父类。
+	 * 2. 解析类列表中被CsvColumn注解的成员变量与get/set方法以便于初始化列信息。
+	 *
+	 */
+	/*
+	 *
+	 *
+	 */
 	private void configureEntityClass() {
+		/* 保证调用 CsvProcessor(Class<T> entityClass) 初始化实体类的类信息，保证反射的使用前提 */
 		if (entityClass == null) {
 			throw new IllegalStateException("Entity class not configured for CSV processor");
 		}
+
+		/* 类成员缓存 */
 		Map<String, ColumnInfo<Object>> fieldNameMap = new LinkedHashMap<String, ColumnInfo<Object>>();
+		/* T类与其父类的列表 */
 		List<Class<?>> classes = discoverClasses();
+		/* 类成员的成员变量预处理 */
 		for (Class<?> clazz : classes) {
 			for (Field field : clazz.getDeclaredFields()) {
+				/* 防止重复解析 */
 				if (fieldNameMap.containsKey(field.getName())) {
 					continue;
 				}
+				/* 只有添加注解CsvField 或 CsvColumn的成员变量才会被解析 */
 				CsvField csvField = field.getAnnotation(CsvField.class);
 				CsvColumn csvColumn = field.getAnnotation(CsvColumn.class);
 				if (csvField == null && csvColumn == null) {
 					continue;
 				}
-
+				/* 添加列信息，解析使用 */
 				addColumnInfo(fieldNameMap, csvColumn, csvField, field.getName(), field.getType(), field, null, null);
 				field.setAccessible(true);
 			}
@@ -1079,11 +1110,14 @@ public class CsvProcessor<T> {
 		Map<String, Method> otherMethodMap = new HashMap<String, Method>();
 		for (Class<?> clazz : classes) {
 			for (Method method : clazz.getMethods()) {
+				/* 没有CsvColumn注解的方法略过 */
 				CsvColumn csvColumn = method.getAnnotation(CsvColumn.class);
 				if (csvColumn == null) {
 					continue;
 				}
 
+				/* get方法以get或is开头 */
+				/* set方法以set开头 */
 				Method getMethod = null;
 				Method setMethod = null;
 				String fieldName = method.getName();
@@ -1134,6 +1168,7 @@ public class CsvProcessor<T> {
 						setMethod);
 			}
 		}
+		/* 异常情况处理 */
 		if (!otherMethodMap.isEmpty()) {
 			Method firstMethod = otherMethodMap.values().iterator().next();
 			throw new IllegalStateException(
@@ -1160,6 +1195,7 @@ public class CsvProcessor<T> {
 		for (Class<?> clazz = entityClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
 			classes.add(clazz);
 		}
+		/* 继承类的存储顺序 */
 		if (superClassColumnsFirst) {
 			// default is add the subclass and then the super but this reverses it
 			Collections.reverse(classes);
@@ -1167,6 +1203,7 @@ public class CsvProcessor<T> {
 		return classes;
 	}
 
+	/* 分配-调整列信息的位置 */
 	private List<ColumnInfo<Object>> assignColumnPositions(Map<String, ColumnInfo<Object>> fieldNameMap) {
 
 		// run through the columns and track the columns that come after others
@@ -1239,6 +1276,7 @@ public class CsvProcessor<T> {
 			String fieldName, Class<?> type, Field field, Method getMethod, Method setMethod) {
 		Converter<?, ?> converter = converterMap.get(type);
 		// test for the enum converter specifically
+		// 特殊类型：枚举类型
 		if (converter == null && type.isEnum()) {
 			converter = EnumConverter.getSingleton();
 		}

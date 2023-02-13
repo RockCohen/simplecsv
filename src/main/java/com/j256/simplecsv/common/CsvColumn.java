@@ -21,11 +21,13 @@ import com.j256.simplecsv.processor.CsvProcessor;
  * 
  * @author graywatson
  */
+
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD })
 public @interface CsvColumn {
 
-	/** Used internally to detect whether or not a value has been configured. */
+	/** Used internally to detect whether a value has been configured. */
 	public static final String DEFAULT_VALUE = "__simplecsv__ default";
 
 	/**
